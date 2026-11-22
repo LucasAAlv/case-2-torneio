@@ -18,6 +18,7 @@ Antes de propor qualquer mudança de desenho, leia:
 - [docs/enunciado.md](docs/enunciado.md): requisitos R1 a R9;
 - [docs/decisoes.md](docs/decisoes.md): diretrizes e decisões, com alternativas e motivos;
 - [docs/arquitetura.md](docs/arquitetura.md): chave, estado na Arena, os dois flows, concorrência, custo e limitações;
+- [docs/setup-arena.md](docs/setup-arena.md): fases, transições e campos da Arena, com os ids;
 - [docs/pesquisa-integration-hub.md](docs/pesquisa-integration-hub.md): o que o Hub oferece, a cobrança por tarefa e os limites;
 - [docs/simulador.md](docs/simulador.md): contrato do simulador e comportamento observado.
 

@@ -5,6 +5,7 @@ Receitas do Integration Hub da Pipefy que conduzem sozinhas um torneio mata-mata
 - Requisitos do enunciado: [docs/enunciado.md](docs/enunciado.md)
 - Arquitetura, chave, estado na Arena, os dois flows, concorrência, custo e limitações: [docs/arquitetura.md](docs/arquitetura.md)
 - Decisões, com alternativas e motivos: [docs/decisoes.md](docs/decisoes.md)
+- Estrutura do pipe Arena e as mutations que a montaram: [docs/setup-arena.md](docs/setup-arena.md)
 - Leitura da documentação do Integration Hub: [docs/pesquisa-integration-hub.md](docs/pesquisa-integration-hub.md)
 - Contrato do Simulador de Batalhas: [docs/simulador.md](docs/simulador.md)
 
