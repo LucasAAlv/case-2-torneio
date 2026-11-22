@@ -11,13 +11,13 @@ Receitas (flows) do **Integration Hub** da Pipefy que conduzem sozinhas um torne
 - alocam cada vencedor na chave seguinte;
 - no fim, criam um card no pipe 307434674 com o nome do Lucas e o do campeão.
 
-Os flows vivem no Hub, dentro do pipe 307434674. Este repositório guarda o que dá para versionar: documentação, payloads, scripts de teste e, se o formato permitir, o export dos flows.
+Os flows vivem no Hub, dentro do pipe 307434674. O estado do torneio fica no pipe **Arena** (307434666), com um card por herói em cada torneio (D1 em [docs/decisoes.md](docs/decisoes.md)). Este repositório guarda o que dá para versionar: documentação, payloads e o export dos flows (D12).
 
 Antes de propor qualquer mudança de desenho, leia:
 
 - [docs/enunciado.md](docs/enunciado.md): requisitos R1 a R9;
 - [docs/decisoes.md](docs/decisoes.md): diretrizes e decisões, com alternativas e motivos;
-- [docs/arquitetura.md](docs/arquitetura.md): chave, ciclo de vida das partidas, concorrência e limitações;
+- [docs/arquitetura.md](docs/arquitetura.md): chave, estado na Arena, os dois flows, concorrência, custo e limitações;
 - [docs/pesquisa-integration-hub.md](docs/pesquisa-integration-hub.md): o que o Hub oferece, a cobrança por tarefa e os limites;
 - [docs/simulador.md](docs/simulador.md): contrato do simulador e comportamento observado.
 
@@ -41,14 +41,16 @@ Pastas novas (scripts de teste, export dos flows, código de etapas Code) entram
 - **Cobrança:** o Hub cobra por **tarefa bem-sucedida**. Gatilho, Router e o nó do Loop não contam; HTTP, conector, Code, Storage e Data Helpers contam.
 - **Storage:** o Put sobrescreve, e não há operação atômica documentada. Nunca faça ler, alterar e gravar num valor que dois callbacks possam tocar ao mesmo tempo.
 - **Concorrência:** até 10 execuções simultâneas por pipe. As quatro quartas podem voltar juntas.
-- **Pipe 307434674:** uma fase (Champions). O formulário inicial tem dois campos obrigatórios, "Process Participant Name" e "Champion Name".
+- **Pipe 307434674:** uma fase (Champions). O formulário inicial tem dois campos obrigatórios, "Process Participant Name" e "Champion Name". Ele não recebe fases nem campos novos: só o card final de cada torneio (D2).
+- **Pipe Arena (307434666):** guarda o estado. A fase de cada card é a posição do herói no torneio, e a Posição (1 a 8) nunca muda (D1, D3).
+- **Acesso à Pipefy:** conector Pipefy com a conexão da Service Account (D8). O seletor de pipe das ações lista os pipes que a conta enxerga, e ela é membro só da Arena, do 307434674 e do database 307434675.
 
 ## Como trabalhar aqui
 
 - **O Lucas decide e o agente executa.** Para onde guardar o estado, quantos flows usar, peça nova ou mudança no modelo de dados: proponha as opções com os trade-offs e espere a decisão.
 - **Não invente comportamento do Hub.** O que não estiver em `docs/` como visto ou testado deve ser conferido na Central de Ajuda (https://help.pipefy.com) ou testado pelo Lucas num flow de rascunho.
 - **Os dados da org não são nossos.** Nada de criar, alterar ou apagar cards, pipes, databases ou flows sem pedido explícito. Toda alteração de teste é revertida.
-- **Segredos nunca entram no repositório**, que é público. Credenciais da Service Account e tokens ficam nas Variables do Hub ou em `.env` (já no `.gitignore`), com um `.env.example` sem valores. Confira se o export de um flow traz segredo antes de versioná-lo.
+- **Segredos nunca entram no repositório**, que é público. As credenciais da Service Account ficam só na conexão do Hub, e outros tokens ficam nas Variables do Hub ou em `.env` (já no `.gitignore`), com um `.env.example` sem valores. Confira se o export de um flow traz segredo antes de versioná-lo.
 - Decisão relevante entra em `docs/decisoes.md` (próximo `D<n>`, com data, escolha, alternativas e motivo). Limitação nova entra em `docs/arquitetura.md`.
 
 ## Git
