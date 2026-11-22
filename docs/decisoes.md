@@ -153,7 +153,7 @@ Lista de locais: Gotham, Metrópolis, Asgard, Wakanda, Themyscira, Nova York, So
 
 ## D10. Campos e título dos cards da Arena (22/11/2026)
 
-**Escolha:** o formulário inicial da Arena tem três campos: **Herói** (texto), **Torneio** (texto, com o slug, como `wakanda-4`) e **Posição** (número de 1 a 8). O título do card é "Wakanda #4 · Batman".
+**Escolha:** o formulário inicial da Arena tem **Herói** (texto), **Torneio** (texto, com o slug, como `wakanda-4`) e **Posição** (número de 1 a 8). O título do card é "Wakanda #4 · Batman". Como a Pipefy tira o título de um único campo, há também um campo **Título**, que o flow Início monta e que é o campo de título do pipe. A estrutura está em [setup-arena.md](setup-arena.md).
 
 **Alternativa:** Herói como conexão com o record do database 307434675, ligando o card ao herói de origem.
 

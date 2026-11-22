@@ -84,7 +84,9 @@ stateDiagram-v2
 
 **Estado de uma partida.** Uma partida está em andamento quando os dois cards dela estão na fase da rodada. Se só um chegou, ela espera o adversário.
 
-**Campos dos cards (D10):** Herói (texto), Torneio (slug, como `wakanda-4`) e Posição (1 a 8). O título é "Wakanda #4 · Batman". Os cards de torneios terminados ficam na Arena, com "Campeões" como hall da fama (D11).
+**Campos dos cards (D10):** Título ("Wakanda #4 · Batman", que é o título do card), Herói (texto), Torneio (slug, como `wakanda-4`) e Posição (1 a 8). Os cards de torneios terminados ficam na Arena, com "Campeões" como hall da fama (D11).
+
+**Transições.** Cada fase da Arena só deixa mover o card para as fases do diagrama acima, e as fases finais (cemitérios e Campeões) não deixam mover para lugar nenhum. Os ids das fases e dos campos, e as mutations que montaram a Arena, estão em [setup-arena.md](setup-arena.md).
 
 ## Flow Início
 
@@ -94,7 +96,7 @@ Gatilho: **Manual Trigger** (D5).
 2. Lê o contador de torneios no Storage.
 3. **Code:** embaralha os heróis, atribui as posições, sorteia o lugar e monta o nome, o slug e as quatro partidas (D6, D7).
 4. Grava o contador incrementado no Storage.
-5. Cria os 8 cards na Arena, em "Não iniciada".
+5. Cria os 8 cards na Arena, em "Não iniciada", com Título, Herói, Torneio e Posição.
 6. Para cada partida das quartas: move os dois cards para "Quartas de final" **e depois** envia o POST ao simulador. Os cards são movidos antes do POST para que um callback rápido já encontre a partida em andamento.
 
 ## Flow Resultado

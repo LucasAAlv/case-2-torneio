@@ -123,7 +123,16 @@ Sete callbacks num torneio inteiro ficam bem abaixo das 10 execuções simultân
   - **Champion Name**: o campeão.
 - Os `field.id` ainda não foram conferidos pela API.
 
-## 4. Ainda não verificado
+## 4. Estrutura de pipe pela API (vista em 22/11/2026)
+
+Ao montar a Arena pelo GraphiQL, alguns pontos da API apareceram. O detalhe está em [setup-arena.md](setup-arena.md).
+
+- **Cada fase limita para onde o card pode ir** (`cards_can_be_moved_to_phases`, configurado com `updatePhaseJumps`). Um pipe novo só liga as fases vizinhas. Mover o card para uma fase fora da lista não é permitido.
+- O título do card vem de **um único campo** (`title_field_id` no `updatePipe`).
+- O `field.id` nasce do rótulo e não muda quando o rótulo é alterado.
+- O `createPhase` aceita `index` (decimal) para posicionar a fase. O `updatePhase` não muda a posição e exige o `name`.
+
+## 5. Ainda não verificado
 
 - Como a peça Code recebe os dados das etapas anteriores.
 - O formato do export de um flow e se ele inclui segredos.
