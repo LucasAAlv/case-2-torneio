@@ -16,15 +16,13 @@ flowchart LR
     subgraph Hub["Integration Hub (no pipe 307434674)"]
       START["Flow Início<br/>Manual Trigger"]
       RESULT["Flow Resultado<br/>webhook do url_retorno"]
-      STORE[("Storage<br/>contador de torneios")]
     end
     FINAL["Pipe 307434674<br/>card do campeão"]
   end
   SIM["Simulador de Batalhas<br/>(externo, assíncrono)"]
 
   START -- lê os heróis --> DB
-  START -- número do torneio --> STORE
-  START -- cria 8 cards --> ARENA
+  START -- conta os cards e cria 8 --> ARENA
   START -- "POST × 4 (QF-1..QF-4)" --> SIM
   SIM -- "callback {winner, identificador}" --> RESULT
   RESULT -- lê e move os cards --> ARENA
@@ -33,6 +31,7 @@ flowchart LR
 ```
 
 - Os flows ficam na aba Integrations do pipe 307434674 e agem na Arena e no database pela conexão da Service Account (D8).
+- Toda leitura é uma consulta GraphQL e toda escrita é uma mutation única, executadas pela Custom API Call do conector. As etapas Code montam as mutations e fazem os POSTs ao simulador (D13). O código e a configuração de cada etapa estão em [flows/](../flows/).
 - O pipe 307434674 continua como foi entregue e só recebe o card final de cada torneio (D2).
 
 ## Chave do torneio
@@ -92,23 +91,22 @@ stateDiagram-v2
 
 Gatilho: **Manual Trigger** (D5).
 
-1. Lê os 8 heróis do database 307434675.
-2. Lê o contador de torneios no Storage.
-3. **Code:** embaralha os heróis, atribui as posições, sorteia o lugar e monta o nome, o slug e as quatro partidas (D6, D7).
-4. Grava o contador incrementado no Storage.
-5. Cria os 8 cards na Arena, em "Não iniciada", com Título, Herói, Torneio e Posição.
-6. Para cada partida das quartas: move os dois cards para "Quartas de final" **e depois** envia o POST ao simulador. Os cards são movidos antes do POST para que um callback rápido já encontre a partida em andamento.
+1. **Ler heróis e Arena:** uma consulta traz os 8 heróis do database 307434675 e o total de cards da Arena.
+2. **Sortear chave (Code):** embaralha os heróis, atribui as posições, sorteia o lugar, calcula o número do torneio (D7) e monta a mutation com as 8 criações (D6).
+3. **Criar cards na Arena:** executa a mutation. Os cards nascem em "Não iniciada", com Título, Herói, Torneio e Posição.
+4. **Preparar quartas (Code):** monta a mutation que move os 8 cards para "Quartas de final".
+5. **Mover para as quartas:** executa a mutation.
+6. **Disparar quartas (Code):** envia as quatro partidas ao simulador. Os cards são movidos **antes** dos POSTs, para que um callback rápido já encontre a partida em andamento.
 
 ## Flow Resultado
 
 Gatilho: **Catch Webhook**, cuja URL é o `url_retorno` enviado ao simulador. O webhook fica sem autenticação, porque o simulador não manda cabeçalho.
 
-1. Lê os cards do torneio indicado no `identificador`, com o `phases_history`.
-2. **Code:** separa o torneio e a partida, acha os dois cards da partida e valida o resultado (veja abaixo). Define o vencedor, o perdedor e as fases de destino.
+1. **Ler partidas em andamento:** uma consulta traz os cards das três fases de rodada da Arena (Quartas, Semifinal e Final), com a hora de entrada na fase.
+2. **Validar resultado (Code):** separa o torneio e a partida, acha os dois cards da partida e valida o resultado (veja abaixo). Monta a mutation que move o vencedor para a próxima fase e o perdedor para o cemitério. Na final, a mesma mutation cria o card no pipe 307434674, com "Process Participant Name" = Lucas Alves e "Champion Name" = o campeão.
 3. **Router:** resultado inválido termina o flow sem efeito.
-4. Move o vencedor para a fase da próxima rodada e o perdedor para o cemitério da rodada.
-5. **Se a partida era a final:** cria o card no pipe 307434674, com "Process Participant Name" = Lucas Alves e "Champion Name" = o campeão, e termina.
-6. Senão, lê de novo os cards do torneio e, numa etapa **Code**, aplica a regra de disparo (D9). Se este flow for o responsável, envia o POST da próxima partida ao simulador.
+4. **Mover cards:** executa a mutation. A resposta já traz os cards da fase de destino, com a hora de entrada de cada um.
+5. **Disparar próxima partida (Code):** aplica a regra de disparo (D9) sobre essa resposta. Se este flow for o responsável, envia o POST da próxima partida ao simulador.
 
 **Validação de cada callback.** O callback só é aceito se as três condições valerem. Se alguma falhar, o flow termina sem efeito.
 1. O `identificador` corresponde a um torneio com cards na Arena e a uma partida válida da chave.
@@ -118,32 +116,33 @@ Gatilho: **Catch Webhook**, cuja URL é o `url_retorno` enviado ao simulador. O 
 ## Concorrência
 
 - **Callbacks fora de ordem e simultâneos:** as quatro quartas podem voltar no mesmo segundo. Cada callback move só os dois cards da própria partida, então dois callbacks nunca mexem no mesmo card.
-- **Disparo da próxima partida (D9):** quando as duas partidas que alimentam uma semifinal terminam juntas, os dois flows podem ver os dois cards na semifinal. Só dispara o flow cujo card entrou na fase por último, pelo `lastTimeIn`. No empate, dispara o flow do card de posição par. Como cada flow move antes de ler, pelo menos um deles enxerga o adversário, desde que a leitura reflita o movimento do outro na hora.
+- **Disparo da próxima partida (D9):** quando as duas partidas que alimentam uma semifinal terminam juntas, os dois flows podem ver os dois cards na semifinal. Só dispara o flow cujo card entrou na fase por último, pelo `started_current_phase_at`. Esse horário tem precisão de segundo, então o empate acontece: nele, dispara o flow do card de **maior posição**. Como a resposta da mutation é calculada depois do movimento, pelo menos um dos dois flows enxerga o adversário. Nos testes, cada semifinal e cada final foi disparada exatamente uma vez.
 - **Callback duplicado ou atrasado:** encontra o vencedor fora da fase da rodada e é descartado pela validação.
-- O Integration Hub não documenta operação atômica no Storage, como mostra [pesquisa-integration-hub.md](pesquisa-integration-hub.md#14-storage-o-estado-sem-sair-do-hub). O único valor no Storage é o contador de torneios, escrito só pelo flow de início, que é manual.
+- **Sem Storage.** O Integration Hub não documenta operação atômica no Storage, como mostra [pesquisa-integration-hub.md](pesquisa-integration-hub.md#14-storage-o-estado-sem-sair-do-hub). O desenho não usa o Storage: todo o estado está nos cards da Arena.
 
 ## Detalhes de implementação
 
-- A URL do webhook do flow Resultado fica numa **Variable** do Hub, que o flow Início usa para montar o `url_retorno`. Ela não é segredo.
-- O POST ao simulador usa a política de retry da peça HTTP para erros 5xx. Um reenvio que gere callback duplicado é descartado pela validação.
+- A URL do webhook do flow Resultado é uma constante no código das etapas de disparo. Ela não é segredo. Se o flow Resultado for recriado, a URL muda e as duas constantes precisam ser atualizadas.
+- Os POSTs ao simulador são feitos com `fetch` dentro das etapas Code, com até 3 tentativas em erro de rede ou 5xx. Um reenvio que gere callback duplicado é descartado pela validação.
 - A Service Account é membro só da Arena, do pipe 307434674 e do database 307434675 (D8).
 
-## Custo estimado em tarefas
+## Custo em tarefas
 
-Estimativa por torneio, a confirmar na aba Runs depois do primeiro torneio completo. Gatilho e Router não contam.
+Contagem pelas etapas executadas nas Runs do torneio de teste de 22/11/2026. Gatilho e Router não contam.
 
-| Flow | Etapas que contam | Tarefas |
+| Execução | Etapas que contam | Tarefas |
 | --- | --- | --- |
-| Início | leitura dos heróis, Get e Put do contador, Code, 8 criações, 8 movimentações e 4 POSTs | ~24 |
-| Resultado, partida que dispara a seguinte | 2 leituras, 2 Code, 2 movimentações e 1 POST | 7 |
-| Resultado, partida que não dispara | 2 leituras, 2 Code e 2 movimentações | 6 |
-| Resultado, final | 1 leitura, 1 Code, 2 movimentações e 1 criação de card | 5 |
+| Início | 1 consulta, 3 Code e 2 mutations | 6 |
+| Resultado válido (inclusive a final) | 1 consulta, 2 Code e 1 mutation | 4 |
+| Resultado inválido (descartado) | 1 consulta e 1 Code | 2 |
 
-Com 3 callbacks que disparam, 3 que não disparam e a final, o torneio custa cerca de **68 tarefas**.
+Um torneio completo é 1 execução do Início e 7 do Resultado: **34 tarefas**. As mesmas operações feitas com uma ação do conector por operação custariam cerca de 68 (D13).
+
+**Tempo:** o segundo torneio de teste levou menos de 50 segundos do Run Flow ao card do campeão.
 
 ## Limitações conhecidas
 
 - **O callback não tem autenticação.** O simulador não manda cabeçalho, então o webhook de retorno aceita qualquer chamada. A validação por estado impede que um resultado forjado altere uma partida que não está em andamento, mas não impede que alguém que conheça a URL e o estado corrente envie um vencedor válido antes do simulador.
 - **O simulador não garante prazo nem entrega.** Se um callback nunca chegar, os dois cards da partida ficam parados na fase da rodada. Não há reenvio automático (veja [simulador.md](simulador.md#pontos-ainda-não-verificados)).
-- **A regra de disparo depende de a leitura refletir o movimento na hora.** Se a busca de cards tiver atraso, os dois flows de uma semifinal podem não enxergar o adversário, e a partida não é disparada. Isso é verificado no primeiro teste.
+- **Partida parada não se recupera sozinha.** Se uma execução do flow Resultado falhar depois de mover os cards, a próxima partida não é disparada. O "Retry" do Hub não resolve: repetir a partir do passo que falhou usa a versão antiga do flow, e repetir do começo reprocessa um callback que já não é válido. A recuperação é reenviar a partida ao simulador à mão, com o mesmo `identificador_da_rodada` (veja [testes.md](testes.md)).
 - **A validade do token da Service Account é fixa,** escolhida na criação (até 30 dias). Quando vencer, é preciso criar outra conta e atualizar a conexão.
