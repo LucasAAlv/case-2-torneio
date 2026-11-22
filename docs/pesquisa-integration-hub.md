@@ -115,13 +115,34 @@ Sete callbacks num torneio inteiro ficam bem abaixo das 10 execuções simultân
   - A alternativa sem conector é chamar a API GraphQL pela peça HTTP, com um token guardado em Variables.
 - **O add-on de Integrations está ativo:** visto na org, a aba aparece no pipe 307434674.
 
-## 3. Pipe do card final (visto na org)
+## 3. Recursos da org (vistos pela API em 22/11/2026)
 
-- **Pipe:** 307434674, "Tech. Consultants (Case 2)", com uma fase, **Champions**, e 0 cards.
-- **Formulário inicial**, com dois campos obrigatórios:
-  - **Process Participant Name**: o nome do candidato;
-  - **Champion Name**: o campeão.
-- Os `field.id` ainda não foram conferidos pela API.
+**Pipe do card final:** 307434674, "Tech. Consultants (Case 2)", com uma fase, **Champions**, e 0 cards. O formulário inicial tem dois campos obrigatórios:
+
+| `field.id` | Rótulo | Tipo | Conteúdo |
+| --- | --- | --- | --- |
+| `nome_do_participante_do_processo_seletivo` | Process Participant Name | `short_text` | o nome do candidato |
+| `nome_do_campe_o` | Champion Name | `short_text` | o campeão |
+
+**Database dos heróis:** 307434675, "Tech. Consultants - League Participants (Database Case 2)".
+
+| `field.id` | Rótulo | Tipo |
+| --- | --- | --- |
+| `nome_participante` | Super Hero Name | `short_text` |
+| `id_participante` | Super Hero ID | `short_text`, com zero à esquerda |
+
+| `nome_participante` | `id_participante` |
+| --- | --- |
+| Hawkeye | 3451 |
+| Batman | 0914 |
+| Spiderman | 7891 |
+| Iron Man | 9136 |
+| Wonder Woman | 9813 |
+| Black Widow | 5162 |
+| Hulk | 4517 |
+| Captain America | 5189 |
+
+**Service Account:** a conta `case2torneio` é membro da Arena, do pipe 307434674 e do database 307434675.
 
 ## 4. Estrutura de pipe pela API (vista em 22/11/2026)
 
