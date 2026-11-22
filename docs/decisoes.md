@@ -124,6 +124,8 @@ Lista de locais: Gotham, Metrópolis, Asgard, Wakanda, Themyscira, Nova York, So
 
 **Motivo:** o número garante que o nome nunca se repete, então um callback de outro torneio nunca encontra cards do torneio ativo. O lugar deixa o kanban legível. O contador custa 2 tarefas por torneio (Get e Put), sem risco de concorrência, porque o início é manual.
 
+**Ajuste na implementação (22/11/2026):** o número não vem do Storage. Como todo torneio cria exatamente 8 cards na Arena e nenhum card é apagado (D11), o número é `⌈cards da Arena ÷ 8⌉ + 1`, lido na mesma consulta que traz os heróis. Isso economiza as 2 tarefas do Storage e tira o Storage do desenho. Se alguém apagar cards da Arena, o número pode se repetir. Nesse caso, o lugar sorteado ainda torna improvável que o slug se repita.
+
 ---
 
 ## D8. A Pipefy é acessada por Service Account, pelo conector (22/11/2026)
@@ -147,7 +149,11 @@ Lista de locais: Gotham, Metrópolis, Asgard, Wakanda, Themyscira, Nova York, So
 
 **Motivo:** quando duas quartas voltam juntas, os dois flows podem ver os dois cards na semifinal e disparar a mesma partida duas vezes. Se os dois callbacks dessa partida duplicada também chegassem juntos, com vencedores diferentes, a validação poderia aceitar os dois. Com o desempate, exatamente um dos dois flows dispara. Como cada flow move antes de ler, pelo menos um deles enxerga o adversário, desde que a leitura reflita o movimento do outro na hora. O "Get cards by phase" oferece a seção Phases History com `lastTimeIn` (visto na org em 22/11/2026).
 
-**A verificar no primeiro teste:** a precisão do `lastTimeIn` (segundos ou milissegundos) e se a busca de cards reflete na hora um card que acabou de ser movido.
+**Ajuste na implementação (22/11/2026):**
+- O horário usado é o `started_current_phase_at` do card, que é a hora de entrada na fase atual e vem direto na resposta da mutation que move o vencedor. Assim, a leitura depois do movimento não custa uma tarefa a mais (veja D13).
+- O desempate no mesmo segundo é pela **maior posição**, e não pela posição par: numa semifinal, os dois cards podem ter posição par (por exemplo, 2 e 4).
+
+**Verificado no teste (22/11/2026):** o horário tem precisão de **segundo**, e dois cards entraram na semifinal no mesmo segundo. A resposta da mutation já mostra o card que o outro flow acabou de mover. Em dois torneios, cada semifinal e cada final foi disparada exatamente uma vez.
 
 ---
 
@@ -180,3 +186,19 @@ Lista de locais: Gotham, Metrópolis, Asgard, Wakanda, Themyscira, Nova York, So
 - Scripts que simulam callbacks (duplicados e fora de ordem): testariam a concorrência de ponta a ponta, mas também não cabiam no prazo.
 
 **Motivo:** o entregável do Case 2 são as receitas no Hub. O export espelha exatamente o que roda lá. Antes de versionar um export, é preciso abrir o arquivo e conferir que ele não traz segredo.
+
+**Ajuste na implementação (22/11/2026):** a pasta [flows/](../flows/) guarda o código de cada etapa Code, igual ao colado no Hub, e a configuração de cada etapa (consultas, referências e Router). Com isso, os flows podem ser conferidos e remontados mesmo sem o export.
+
+---
+
+## D13. As chamadas à Pipefy são GraphQL montado nas etapas Code (22/11/2026)
+
+**Escolha:** cada flow lê o estado com uma consulta GraphQL e escreve com uma única mutation. As duas passam pela ação Custom API Call do conector, com a Service Account. As etapas Code leem a resposta e montam a mutation seguinte:
+- **Início:** 1 consulta (heróis e total de cards da Arena), 1 mutation com as 8 criações e 1 mutation com as 8 movimentações.
+- **Resultado:** 1 consulta (as fases de rodada da Arena) e 1 mutation que move vencedor e perdedor. Na final, a mesma mutation cria o card no 307434674. A resposta da mutation já traz os cards da fase de destino, que a regra de disparo (D9) usa.
+- Os POSTs ao simulador saem de dentro das etapas Code (`fetch`), com até 3 tentativas em erro de rede ou 5xx.
+
+**Alternativa:** as ações prontas do conector (Get cards by phase, Move card, Create card) e a peça HTTP. Cada ação faz uma operação, então o torneio custaria cerca de 68 tarefas, em vez de cerca de 34.
+
+**Motivo:** o R9 pede poucas chamadas, e o Hub cobra por tarefa. Agrupar as operações numa mutation e os POSTs numa etapa Code divide o custo pela metade. O custo é mais código para manter: as consultas e mutations ficam versionadas em [flows/](../flows/).
+

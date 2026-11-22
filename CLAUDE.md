@@ -20,13 +20,15 @@ Antes de propor qualquer mudança de desenho, leia:
 - [docs/arquitetura.md](docs/arquitetura.md): chave, estado na Arena, os dois flows, concorrência, custo e limitações;
 - [docs/setup-arena.md](docs/setup-arena.md): fases, transições e campos da Arena, com os ids;
 - [docs/pesquisa-integration-hub.md](docs/pesquisa-integration-hub.md): o que o Hub oferece, a cobrança por tarefa e os limites;
-- [docs/simulador.md](docs/simulador.md): contrato do simulador e comportamento observado.
+- [docs/simulador.md](docs/simulador.md): contrato do simulador e comportamento observado;
+- [docs/testes.md](docs/testes.md): torneios de teste e o que aconteceu em cada um.
 
 ## Estrutura
 
 | Caminho | Conteúdo |
 | --- | --- |
 | `docs/` | Documentação. Ela é atualizada junto com cada mudança, e não só no fim. |
+| `flows/` | Configuração dos dois flows e código das etapas Code, igual ao que está colado no Hub |
 | `payloads/simulator/` | Exemplos da requisição ao simulador e do callback |
 
 Pastas novas (scripts de teste, export dos flows, código de etapas Code) entram com a decisão que as justifica.
@@ -40,7 +42,8 @@ Pastas novas (scripts de teste, export dos flows, código de etapas Code) entram
   - o perdedor não vem no callback.
 - **Webhook do Hub:** responde 200 na hora e processa em segundo plano. O sufixo `/test` gera dados de exemplo sem executar o flow publicado.
 - **Cobrança:** o Hub cobra por **tarefa bem-sucedida**. Gatilho, Router e o nó do Loop não contam; HTTP, conector, Code, Storage e Data Helpers contam.
-- **Storage:** o Put sobrescreve, e não há operação atômica documentada. Nunca faça ler, alterar e gravar num valor que dois callbacks possam tocar ao mesmo tempo.
+- **Flows publicados:** "Torneio - Início" (Manual Trigger) e "Torneio - Resultado" (webhook `https://ipaas.pipefy.com/api/v1/webhooks/kWlKlvHypIipDk8w7Gyq9`, que é o `url_retorno`). O código em `flows/` é igual ao colado no Hub: toda mudança entra nos dois lugares, e o flow precisa ser republicado.
+- **Storage:** o desenho não usa. O Put sobrescreve, e não há operação atômica documentada. Nunca faça ler, alterar e gravar num valor que dois callbacks possam tocar ao mesmo tempo.
 - **Concorrência:** até 10 execuções simultâneas por pipe. As quatro quartas podem voltar juntas.
 - **Pipe 307434674:** uma fase (Champions). O formulário inicial tem dois campos obrigatórios, "Process Participant Name" e "Champion Name". Ele não recebe fases nem campos novos: só o card final de cada torneio (D2).
 - **Pipe Arena (307434666):** guarda o estado. A fase de cada card é a posição do herói no torneio, e a Posição (1 a 8) nunca muda (D1, D3).

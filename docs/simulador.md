@@ -38,10 +38,12 @@ Content-Type: application/json
 | Os callbacks chegam **fora da ordem** de envio. | Cada resultado precisa trazer a sua posição na chave pelo `identificador`. |
 | Num teste, repetir o mesmo par deu o mesmo vencedor. | Não dá para depender disso: a amostra é de um caso. |
 | Não há autenticação. | Só é aceito resultado de partida existente, em andamento e com vencedor entre os dois jogadores dela. |
+| Nos testes de 22/11/2026, os callbacks chegaram em poucos segundos, e um torneio inteiro levou menos de 50 s. | As três rodadas cabem numa demo ao vivo. |
+| O `identificador_da_rodada` com slug e partida (`mundo-bizarro-2:SF-1`) volta intacto no `identificador`. | O formato de D7 funciona. |
+| O `winner` voltou com o mesmo nome enviado nos 14 callbacks dos testes. | A comparação sem diferenciar maiúsculas e espaços é só uma margem de segurança. |
 
 ## Pontos ainda não verificados
 
 - Se o simulador reenvia o callback quando o webhook de retorno falha ou demora.
 - Se ele envia mais de um callback para a mesma requisição.
-- Qual é o limite de tamanho e de caracteres do `identificador_da_rodada`.
-- O formato exato do `winner`: se vem igual ao nome enviado, com a mesma caixa e os mesmos espaços.
+- Qual é o limite de tamanho e de caracteres do `identificador_da_rodada`. Identificadores de até 24 caracteres funcionaram.
