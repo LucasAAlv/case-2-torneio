@@ -1,8 +1,8 @@
 # Pesquisa: Integration Hub da Pipefy
 
-Leitura da Central de Ajuda e da Comunidade da Pipefy, feita em 21/11/2026, e uma visita à aba Integrations do pipe 307434674 sem criar nada. Serve para embasar a modelagem do Case 2.
+Leitura da Central de Ajuda e da Comunidade da Pipefy, feita em 21/11/2026, e visitas à aba Integrations do pipe 307434674 em 21 e 22/11/2026. Serve para embasar a modelagem do Case 2.
 
-Tudo aqui vem da documentação, **salvo o que está marcado como "visto na org"**. Nada foi testado montando um fluxo. Quando a documentação não cobre um ponto, isso está dito como "não documentado".
+Tudo aqui vem da documentação, **salvo o que está marcado como "visto na org"**. Em 22/11, dois flows de rascunho foram criados só para abrir a configuração das ações e apagados em seguida. Nenhum flow foi executado. Quando a documentação não cobre um ponto, isso está dito como "não documentado".
 
 ---
 
@@ -14,7 +14,7 @@ Tudo aqui vem da documentação, **salvo o que está marcado como "visto na org"
 - **Visto na org:** a aba **Integrations** do pipe 307434674 tem as abas Flows, Runs, Connections e Variables. Estão todas vazias.
   - A tela de início oferece "Build a Flow", a partir do zero, por import ou por template.
   - Também oferece "Create a Table".
-- **Import** sugere que um flow pode ser exportado e importado como arquivo. Se for verdade, as receitas podem ser versionadas neste repositório. O formato ainda não foi verificado.
+- **Visto na org:** o menu de cada flow tem Rename, Move To, Duplicate, Versions, **Import**, **Export** e Delete. As receitas podem, portanto, ser exportadas e versionadas neste repositório. O formato do arquivo ainda não foi aberto.
 - O Hub é construído sobre o **Activepieces**. A Comunidade anunciou isso em agosto de 2025, e o catálogo de conectores lista "Activepieces Platform". Os nomes das peças (Router, Loop, Storage, Tables, Sub Flows) são os do Activepieces.
 
 ### 1.2. Gatilhos que servem ao torneio
@@ -40,11 +40,21 @@ Tudo aqui vem da documentação, **salvo o que está marcado como "visto na org"
 | **Pipefy** (conector) | Triggers e ações de cards e de **records de database**. Busca card por id, por valor de campo, por fase ou por título. Também tem **Custom API Call** para qualquer query ou mutation GraphQL. | Autentica por **Service Account** (Client ID e Client Secret), que precisa ser autorizada em cada pipe. |
 | **Storage** | Chave-valor persistente. Operações Get, Put, Append, Remove e Add To List. | Veja a seção 1.4. |
 | **Tables** | Tabelas de dados dentro do Hub. | Documentação não consultada. A tela "Create a Table" aparece na aba Integrations. |
-| **Code** | JavaScript ou TypeScript. | Limite de 90 s por etapa. A documentação recomenda preferir peças nativas. |
+| **Code** | JavaScript ou TypeScript. | Limite de 90 s por etapa. A documentação recomenda preferir peças nativas. **Visto na org:** aparece nos destaques do seletor de peças, junto com Router, HTTP e AI. |
 | **Router** (Branch) | Condições e caminhos. | **Não conta tarefa.** |
 | **Loop** (For Each) | Itera uma lista. | O nó não conta, mas cada ação dentro dele conta por iteração. |
 | **Sub Flows** | Chama um Callable Flow, síncrono ou assíncrono. | O subflow precisa estar publicado e ativo. |
 | Delay, Data Mapper, JSON, Text Helper, Math Helper, Date Helper | Utilitários. | Contam tarefa como Data Helpers. |
+
+**O conector Pipefy visto na org (22/11/2026):**
+- **Ações disponíveis:**
+  - cards: Create card, Move card, Update card, Delete card, Get card by id, Get cards by field value, Get cards by phase e Get cards by title;
+  - records: Create record, Update record, Update record status, Delete record, Get record by id, Get records by field value e Get records by filter;
+  - Custom API Call;
+  - outras: Batch export, Batch upsert, Reprocess batch operation, Card PDF Generate, Upload e Delete attachment, Update items in list type fields, Configure public phase form link e convites (Invite user to pipe, database ou organization).
+- **A ação pede Connection, Organization, Pipe e Phase.** O seletor de Pipe lista os pipes que a **Service Account** enxerga, e não o pipe que hospeda o flow. Com a conta membro só de um pipe de teste, o seletor listou só esse pipe, e não o 307434674, onde o flow estava. Um flow pode, portanto, agir em qualquer pipe autorizado para a conta.
+- **Retorno do "Get cards by phase":** sempre traz `id`, `fields`, `fields_by_phase` e `pipe`. Seções opcionais, marcadas por padrão, acrescentam Card Information, **Phases History** (`phase`, `firstTimeIn`, `lastTimeIn`, `lastTimeOut`, `duration`, `created_at`, `became_late`), Attachments, Comments e outras.
+- A Central de Ajuda avisa que a peça **HTTP não reaproveita credenciais** entre flows diferentes, nem dentro do mesmo pipe. A conexão do conector Pipefy é reaproveitada.
 
 ### 1.4. Storage: o estado sem sair do Hub
 
@@ -96,7 +106,12 @@ Sete callbacks num torneio inteiro ficam bem abaixo das 10 execuções simultân
 
 ## 2. Pré-requisitos na org
 
-- **Service Account:** o conector Pipefy exige uma, com Client ID e Client Secret, autorizada no pipe. Criá-la e guardar as credenciais é um passo manual, feito pelo administrador da org.
+- **Service Account:** o conector Pipefy exige uma, com Client ID e Client Secret.
+  - **Onde criar:** nome da empresa ou foto de perfil → **Members and Permissions** → aba **Service Accounts** → **Create Service Account**. Só um **Super Admin** da org consegue.
+  - O nome vira o e-mail da conta e tem até 20 caracteres.
+  - A validade do token vai de 5 minutos a 30 dias e **não pode ser alterada** depois da criação.
+  - A conta precisa ser membro de cada pipe e database que o flow usa. Sem isso, as chamadas voltam com `PERMISSION_DENIED`. A ajuda recomenda não convidá-la como membro comum da empresa, por causa da cobrança.
+  - **Conexão no Hub:** aba Integrations → **Connections** → **+ New Connection** → conector Pipefy, com o Client ID e o Client Secret.
   - A alternativa sem conector é chamar a API GraphQL pela peça HTTP, com um token guardado em Variables.
 - **O add-on de Integrations está ativo:** visto na org, a aba aparece no pipe 307434674.
 
@@ -110,8 +125,11 @@ Sete callbacks num torneio inteiro ficam bem abaixo das 10 execuções simultân
 
 ## 4. Ainda não verificado
 
-- Se a peça Code existe na org e como ela recebe os dados das etapas anteriores.
+- Como a peça Code recebe os dados das etapas anteriores.
 - O formato do export de um flow e se ele inclui segredos.
+- A precisão do `lastTimeIn` (segundos ou milissegundos).
+- Se a busca de cards reflete na hora um card que acabou de ser movido.
+- Se o `createCard` aceita `phase_id` e se a API exige os campos obrigatórios do formulário inicial.
 - Se o Storage tem alguma garantia de atomicidade.
 - O que a peça **Tables** oferece: busca, update por linha e visualização.
 - Se a ação de record do conector Pipefy permite atualizar um único campo sem regravar o registro.
@@ -124,6 +142,7 @@ Sete callbacks num torneio inteiro ficam bem abaixo das 10 execuções simultân
 - [Receiving Data with Webhooks](https://help.pipefy.com/en/articles/14693313-receiving-data-with-webhooks-in-pipefy-integrations)
 - [Working with Persistent Storage](https://help.pipefy.com/en/articles/14693415-working-with-persistent-storage-in-pipefy-integrations)
 - [Best Practices for High-Performance Flows](https://help.pipefy.com/en/articles/13791558-best-practices-for-high-performance-flows)
+- [Service Accounts](https://help.pipefy.com/en/articles/9027789-service-accounts)
 - [How to read your Integrations Usage Stats](https://help.pipefy.com/en/articles/15399913-how-to-read-your-integrations-usage-stats)
 - [Integrations Connectors Catalog (A-Z)](https://help.pipefy.com/en/articles/12685184-integrations-connectors-catalog-a-z)
 - Comunidade: [Integrations Hub: what it is](https://community.pipefy.com/getting-started-146/pipefy-integrations-hub-what-it-is-and-when-to-use-it-5310), [Webhooks](https://community.pipefy.com/integrations-and-api-155/webhooks-receive-and-respond-to-events-in-real-time-5315), [The Pipefy connector](https://community.pipefy.com/integrations-and-api-155/the-pipefy-connector-triggers-actions-and-decisions-5325), [Sub-flows](https://community.pipefy.com/pipes-and-phases-147/sub-flows-how-to-modularize-your-main-flow-5311), [The HTTP action](https://community.pipefy.com/integrations-and-api-155/the-http-action-connect-any-api-to-your-flow-5314), [Best Practices & Usage Limits](https://community.pipefy.com/integrations-and-api-155/pipefy-integration-best-practices-usage-limits-guide-5836)
