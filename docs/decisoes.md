@@ -85,17 +85,21 @@ Um flow no 307434674 consegue agir na Arena: o seletor de pipe das ações do co
 
 **Motivo:** cada flow tem um gatilho e uma responsabilidade. O POST ao simulador aparece nos dois flows, mas é uma etapa HTTP simples.
 
+**Ajuste na implementação (22/11/2026):** o POST não usa a peça HTTP. Ele sai de dentro das etapas Code, com `fetch` (D13).
+
 ---
 
 ## D5. O torneio começa pelo Manual Trigger (22/11/2026)
 
-**Escolha:** o flow de início usa o Manual Trigger. Depois do clique em "Run", o torneio segue sozinho até o card final.
+**Escolha:** o flow de início usa o Manual Trigger. Depois do clique em **Run Flow**, o torneio segue sozinho até o card final.
 
 **Alternativas:**
 - Gatilho de card criado num pipe: exigiria um pipe de "pedidos de torneio" só para isso.
 - POST manual no webhook: o início dependeria de uma ferramenta fora da Pipefy.
 
 **Motivo:** sem efeito colateral e com um clique na demo.
+
+**Visto no Hub (22/11/2026):** o flow publicado abre em modo de leitura, e o Run Flow só aparece depois do clique em **Edit flow**.
 
 ---
 
