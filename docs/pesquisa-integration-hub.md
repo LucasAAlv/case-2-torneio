@@ -155,15 +155,22 @@ Ao montar a Arena pelo GraphiQL, alguns pontos da API apareceram. O detalhe est�
 
 ## 5. Ainda não verificado
 
-- Como a peça Code recebe os dados das etapas anteriores.
 - O formato do export de um flow e se ele inclui segredos.
-- A precisão do `lastTimeIn` (segundos ou milissegundos).
-- Se a busca de cards reflete na hora um card que acabou de ser movido.
-- Se o `createCard` aceita `phase_id` e se a API exige os campos obrigatórios do formulário inicial.
+- Se a API exige os campos obrigatórios do formulário inicial no `createCard`. O `CreateCardInput` tem `phase_id`.
 - Se o Storage tem alguma garantia de atomicidade.
 - O que a peça **Tables** oferece: busca, update por linha e visualização.
 - Se a ação de record do conector Pipefy permite atualizar um único campo sem regravar o registro.
-- Se o webhook entrega o body JSON já interpretado para as etapas seguintes.
+
+## 6. Visto ao montar os flows (22/11/2026)
+
+- **Code:** recebe as entradas como pares chave e valor, em `inputs.<chave>`, e o retorno da função vira a saída da etapa. O `fetch` funciona dentro da etapa, o que permite chamar o simulador sem a peça HTTP.
+- **Webhook:** entrega o body JSON já interpretado (`body.winner`, `body.identificador`) e também o `rawBody`.
+- **Custom API Call:** devolve `status`, `headers` e `body`, com o body já interpretado. O corpo JSON aceita uma referência inteira a um objeto de outra etapa, como `{{step_2['output']['payload']}}`.
+- **Referências:** a etapa Code expõe a saída em `step_N['output']`. O seletor de dados só oferece campos de etapas que já têm uma saída de teste. Uma referência digitada à mão só vale depois de salva, e uma referência errada chega vazia, sem erro de configuração.
+- **Precisão do horário:** `started_current_phase_at` (e o `lastTimeIn` do histórico) tem precisão de segundo.
+- **Leitura depois de mover:** a resposta de uma mutation `moveCardToPhase` já reflete o movimento feito por outra execução no mesmo instante.
+- **Retry de execução:** "from failed step" repete na versão do flow em que a execução rodou. "on latest version" repete o flow inteiro, desde o gatilho.
+- **Publicação:** editar um flow publicado cria um rascunho, que só vale depois de publicar de novo.
 
 ## Fontes
 
