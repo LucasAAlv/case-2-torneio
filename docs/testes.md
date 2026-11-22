@@ -19,7 +19,7 @@ Primeiro torneio, iniciado pelo Run Flow do flow Início.
 - **Recuperação:** as duas semifinais foram reenviadas ao simulador à mão (`triskelion-1:SF-1` e `triskelion-1:SF-2`), com os jogadores que estavam na fase Semifinal. A partir daí, o flow corrigido seguiu sozinho: disparou a final, moveu os cards e criou o card do campeão.
 - **Campeão:** Hulk. Card criado no pipe 307434674 com "Lucas Alves / Hulk".
 
-**Observado:** o `started_current_phase_at` tem precisão de segundo. Dois cards entraram na Semifinal no mesmo segundo (`05:40:48Z`), o que confirma a necessidade do desempate por posição (D9).
+**Observado:** o `started_current_phase_at` tem precisão de segundo. Dois cards de partidas diferentes entraram na Semifinal no mesmo segundo (`05:40:48Z`). Isso mostra que o empate é possível e que o desempate por posição é necessário (D9), mas o empate dentro de uma mesma partida não foi observado na org.
 
 ## 3. Torneio "Batalha em Mundo Bizarro #2" (`mundo-bizarro-2`)
 
@@ -39,6 +39,14 @@ Estado final da Arena para esse torneio:
 | Cemitério da semifinal | Hulk, Hawkeye |
 | Cemitério da final | Spiderman |
 | Campeões | Wonder Woman |
+
+## 4. Desempate no mesmo segundo (teste local)
+
+O código de `flows/resultado/disparar-proxima-partida.js` foi executado fora do Hub, com o `fetch` simulado e o mesmo horário de entrada para os dois cards da partida.
+
+- **Cenários:** os 24 pares de posições possíveis (8 nas semifinais e 16 na final), com os dois flows executados nas duas ordens, num total de 48 execuções de par.
+- **Resultado:** em todas, houve um único POST, feito pelo flow do card de maior posição, e a menor posição entrou como `player1`.
+- **Limite:** o teste cobre a regra de disparo. Ele não reproduz a concorrência real do Hub.
 
 ## Como repetir
 

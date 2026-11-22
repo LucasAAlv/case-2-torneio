@@ -153,7 +153,7 @@ Lista de locais: Gotham, Metrópolis, Asgard, Wakanda, Themyscira, Nova York, So
 - O horário usado é o `started_current_phase_at` do card, que é a hora de entrada na fase atual e vem direto na resposta da mutation que move o vencedor. Assim, a leitura depois do movimento não custa uma tarefa a mais (veja D13).
 - O desempate no mesmo segundo é pela **maior posição**, e não pela posição par: numa semifinal, os dois cards podem ter posição par (por exemplo, 2 e 4).
 
-**Verificado no teste (22/11/2026):** o horário tem precisão de **segundo**, e dois cards entraram na semifinal no mesmo segundo. A resposta da mutation já mostra o card que o outro flow acabou de mover. Em dois torneios, cada semifinal e cada final foi disparada exatamente uma vez.
+**Verificado no teste (22/11/2026):** o horário tem precisão de **segundo**, e dois cards de partidas diferentes entraram na semifinal no mesmo segundo. O empate dentro de uma mesma partida não foi observado na org e foi conferido num teste local (veja [testes.md](testes.md)). A resposta da mutation já mostra o card que o outro flow acabou de mover. No `mundo-bizarro-2`, cada semifinal e a final foram disparadas exatamente uma vez. No `triskelion-1`, as semifinais foram reenviadas à mão, e o flow disparou a final uma vez.
 
 ---
 
