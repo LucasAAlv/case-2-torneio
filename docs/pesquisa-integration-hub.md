@@ -2,7 +2,7 @@
 
 Leitura da Central de Ajuda e da Comunidade da Pipefy, feita em 21/11/2026, e visitas à aba Integrations do pipe 307434674 em 21 e 22/11/2026. Serve para embasar a modelagem do Case 2.
 
-Tudo aqui vem da documentação, **salvo o que está marcado como "visto na org"**. Em 22/11, dois flows de rascunho foram criados só para abrir a configuração das ações e apagados em seguida. Nenhum flow foi executado. Quando a documentação não cobre um ponto, isso está dito como "não documentado".
+Tudo aqui vem da documentação, **salvo o que está marcado como "visto na org"**. Em 22/11, dois flows de rascunho foram criados só para abrir a configuração das ações e apagados em seguida. Até ali, nenhum flow tinha sido executado. O que apareceu depois, na montagem e na execução dos flows do torneio, está na seção 6. Quando a documentação não cobre um ponto, isso está dito como "não documentado".
 
 ---
 
