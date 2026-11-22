@@ -15,7 +15,7 @@ Receitas do Integration Hub da Pipefy que conduzem sozinhas um torneio mata-mata
 
 ## Como rodar um torneio
 
-1. No pipe 307434674, abra **Integrations → Flows → Torneio - Início** e clique em **Run Flow**.
+1. No pipe 307434674, abra **Integrations → Flows → Torneio - Início**, clique em **Edit flow** e depois em **Run Flow**. O flow abre em modo de leitura, e o Run Flow só aparece depois do Edit flow.
 2. Acompanhe os heróis andando pelas fases da Arena (https://app.pipefy.com/pipes/307434666). O torneio termina em cerca de um minuto.
 3. O card do campeão aparece na fase Champions do pipe 307434674, com o nome do candidato e o do campeão.
 
