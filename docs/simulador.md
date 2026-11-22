@@ -12,7 +12,7 @@ Content-Type: application/json
   "player1": "Batman",
   "player2": "Hulk",
   "url_retorno": "<webhook que recebe o resultado>",
-  "identificador_da_rodada": "QF-1"
+  "identificador_da_rodada": "wakanda-4:QF-1"
 }
 ```
 
@@ -23,7 +23,7 @@ Content-Type: application/json
 ## Callback
 
 ```json
-{ "winner": "Batman", "identificador": "QF-1" }
+{ "winner": "Batman", "identificador": "wakanda-4:QF-1" }
 ```
 
 - O campo de volta se chama **`identificador`**, e não `identificador_da_rodada`. Ele devolve o valor enviado na requisição.

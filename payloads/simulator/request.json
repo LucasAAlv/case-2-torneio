@@ -2,5 +2,5 @@
   "player1": "Batman",
   "player2": "Hulk",
   "url_retorno": "https://ipaas.pipefy.com/api/v1/webhooks/<id-do-webhook-de-resultado>",
-  "identificador_da_rodada": "QF-1"
+  "identificador_da_rodada": "wakanda-4:QF-1"
 }
