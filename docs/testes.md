@@ -42,6 +42,6 @@ Estado final da Arena para esse torneio:
 
 ## Como repetir
 
-1. No Hub do pipe 307434674, abra o flow **Torneio - Início** e clique em **Run Flow**.
+1. No Hub do pipe 307434674, abra o flow **Torneio - Início**, clique em **Edit flow** (ele abre em modo de leitura) e depois em **Run Flow**.
 2. Acompanhe a Arena (https://app.pipefy.com/pipes/307434666). Os cards andam pelas fases em cerca de um minuto.
 3. Confira o card do campeão no pipe 307434674 e as execuções na aba **Runs**.
