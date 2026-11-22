@@ -18,7 +18,7 @@ Content-Type: application/json
 
 - **O método precisa ser POST.** Com GET, o simulador responde 200 `{}` e não processa a batalha.
 - A resposta imediata é 200 `{}`. Ela só confirma o recebimento, não traz o resultado.
-- O domínio `ipaas.pipefy.com` é o mesmo dos webhooks do Integration Hub. Isso indica que o próprio simulador é uma receita, e que o `url_retorno` pode ser o webhook de entrada de uma receita do torneio. Ainda não foi testado.
+- O domínio `ipaas.pipefy.com` é o mesmo dos webhooks do Integration Hub. Isso indica que o próprio simulador é uma receita, e que o `url_retorno` pode ser o webhook de entrada de uma receita do torneio. O uso do webhook do flow Resultado como `url_retorno` foi confirmado nos testes de 22/11/2026. Que o simulador seja uma receita continua sendo uma suposição.
 
 ## Callback
 
