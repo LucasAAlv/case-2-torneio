@@ -46,7 +46,9 @@ O código de `flows/resultado/disparar-proxima-partida.js` foi executado fora do
 
 - **Cenários:** os 24 pares de posições possíveis (8 nas semifinais e 16 na final), com os dois flows executados nas duas ordens, num total de 48 execuções de par.
 - **Resultado:** em todas, houve um único POST, feito pelo flow do card de maior posição, e a menor posição entrou como `player1`.
-- **Limite:** o teste cobre a regra de disparo. Ele não reproduz a concorrência real do Hub.
+- **Pressuposto:** os dois flows enxergam os dois cards.
+- **Sem o pressuposto:** os mesmos 24 pares e as duas ordens foram executados com o primeiro flow lendo a fase antes de o segundo mover. Nas 24 execuções em que o card de menor posição foi movido primeiro, houve um único POST. Nas 24 em que foi o de maior posição, **não houve nenhum POST**, e a partida ficaria parada (limite conhecido da D9).
+- **Limite:** o teste cobre a regra de disparo. Ele não reproduz a concorrência real do Hub, e o caso sem disparo não foi observado na org.
 
 ## Como repetir
 
