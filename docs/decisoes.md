@@ -149,15 +149,13 @@ Lista de locais: Gotham, Metrópolis, Asgard, Wakanda, Themyscira, Nova York, So
 
 ## D9. A próxima partida é disparada por quem entrou por último na fase (22/11/2026)
 
-**Escolha:** depois de mover o vencedor, o flow de resultado lê os cards do torneio, com o `phases_history`. Ele só dispara a partida seguinte se o adversário já estiver na fase **e** o `lastTimeIn` do card que ele acabou de mover for maior que o do adversário. Se os dois horários forem iguais, dispara o flow do card de posição par.
+**Escolha:** depois de mover o vencedor, o flow de resultado lê os cards do torneio, com o `phases_history`. Ele só dispara a partida seguinte se o adversário já estiver na fase **e** o `lastTimeIn` do card que ele acabou de mover for maior que o do adversário. Se os dois horários forem iguais, dispara o flow do card de maior posição.
 
 **Alternativa:** disparar sempre que o adversário estiver na fase e confiar na validação por estado para descartar o resultado duplicado.
 
 **Motivo:** quando duas quartas voltam juntas, os dois flows podem ver os dois cards na semifinal e disparar a mesma partida duas vezes. Se os dois callbacks dessa partida duplicada também chegassem juntos, com vencedores diferentes, a validação poderia aceitar os dois. Com o desempate, no máximo um dos dois flows dispara. Como cada flow move antes de ler, pelo menos um deles enxerga o adversário, desde que a leitura reflita o movimento do outro na hora. Isso não garante que a partida sempre saia (veja o limite conhecido). O "Get cards by phase" oferece a seção Phases History com `lastTimeIn` (visto na org em 22/11/2026).
 
-**Ajuste na implementação (22/11/2026):**
-- O horário usado é o `started_current_phase_at` do card, que é a hora de entrada na fase atual e vem direto na resposta da mutation que move o vencedor. Assim, a leitura depois do movimento não custa uma tarefa a mais (veja D13).
-- O desempate no mesmo segundo é pela **maior posição**, e não pela posição par: numa semifinal, os dois cards podem ter posição par (por exemplo, 2 e 4).
+**Ajuste na implementação (22/11/2026):** o horário usado é o `started_current_phase_at` do card, que é a hora de entrada na fase atual e vem direto na resposta da mutation que move o vencedor. Assim, a leitura depois do movimento não custa uma tarefa a mais (veja D13).
 
 **Verificado no teste (22/11/2026):** o horário tem precisão de **segundo**, e dois cards de partidas diferentes entraram na semifinal no mesmo segundo. O empate dentro de uma mesma partida não foi observado na org e foi conferido num teste local (veja [testes.md](testes.md)). A resposta da mutation já mostra o card que o outro flow acabou de mover. No `mundo-bizarro-2`, cada semifinal e a final foram disparadas exatamente uma vez. No `triskelion-1`, as semifinais foram reenviadas à mão, e o flow disparou a final uma vez.
 
