@@ -11,10 +11,12 @@ Estas diretrizes vieram da análise do simulador e valem para qualquer modelagem
 - **O identificador codifica a posição na chave.** As partidas são `QF-1` a `QF-4`, `SF-1`, `SF-2` e `F-1`.
 - **Regra de avanço:** o vencedor de `QF-n` vai para `SF-⌈n/2⌉`, como `player1` se n for ímpar e como `player2` se n for par. A mesma regra leva das semifinais para a final. Isso dispensa uma tabela de chaveamento.
 - **Cada callback mexe só na própria partida.** A partida seguinte só é disparada quando os dois jogadores dela estão definidos. Assim, a ordem de chegada dos resultados não importa. Na Arena (D1), isso significa mover só os dois cards da partida.
-- **Validação por estado:** só é aceito resultado de partida existente, em andamento e com vencedor entre os dois jogadores dela. Essa regra resolve três problemas de uma vez:
+- **Validação por estado:** só é aceito resultado de partida existente, em andamento e com vencedor entre os dois jogadores dela. Essa regra reduz três problemas de uma vez:
   - a falta de autenticação no callback;
-  - os callbacks duplicados;
-  - o disparo duplicado de uma partida por concorrência.
+  - os callbacks duplicados, quando o segundo chega depois de o primeiro mover os cards;
+  - o disparo duplicado de uma partida por concorrência, que a D9 completa.
+
+  Ela não é uma trava: ler e escrever não é atômico, e dois callbacks iguais que chegam ao mesmo tempo passam os dois (veja as [limitações](arquitetura.md#limitações-conhecidas)).
 - **Economia:** poucas receitas e poucas tarefas. O Hub cobra por tarefa bem-sucedida, e o Router não conta (veja [pesquisa-integration-hub.md](pesquisa-integration-hub.md#15-cobrança-o-que-otimizar-o-fluxo-quer-dizer)).
 
 ---
