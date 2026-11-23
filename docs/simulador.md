@@ -45,5 +45,5 @@ Content-Type: application/json
 ## Pontos ainda não verificados
 
 - Se o simulador reenvia o callback quando o webhook de retorno falha ou demora.
-- Se ele envia mais de um callback para a mesma requisição.
+- Se ele envia mais de um callback para a mesma requisição. Nos 14 callbacks dos testes de 22/11/2026, não houve nenhum duplicado.
 - Qual é o limite de tamanho e de caracteres do `identificador_da_rodada`. Identificadores de até 24 caracteres funcionaram.

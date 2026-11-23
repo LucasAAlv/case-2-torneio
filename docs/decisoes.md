@@ -11,10 +11,12 @@ Estas diretrizes vieram da análise do simulador e valem para qualquer modelagem
 - **O identificador codifica a posição na chave.** As partidas são `QF-1` a `QF-4`, `SF-1`, `SF-2` e `F-1`.
 - **Regra de avanço:** o vencedor de `QF-n` vai para `SF-⌈n/2⌉`, como `player1` se n for ímpar e como `player2` se n for par. A mesma regra leva das semifinais para a final. Isso dispensa uma tabela de chaveamento.
 - **Cada callback mexe só na própria partida.** A partida seguinte só é disparada quando os dois jogadores dela estão definidos. Assim, a ordem de chegada dos resultados não importa. Na Arena (D1), isso significa mover só os dois cards da partida.
-- **Validação por estado:** só é aceito resultado de partida existente, em andamento e com vencedor entre os dois jogadores dela. Essa regra resolve três problemas de uma vez:
+- **Validação por estado:** só é aceito resultado de partida existente, em andamento e com vencedor entre os dois jogadores dela. Essa regra reduz três problemas de uma vez:
   - a falta de autenticação no callback;
-  - os callbacks duplicados;
-  - o disparo duplicado de uma partida por concorrência.
+  - os callbacks duplicados, quando o segundo chega depois de o primeiro mover os cards;
+  - o disparo duplicado de uma partida por concorrência, que a D9 completa.
+
+  Ela não é uma trava: ler e escrever não é atômico, e dois callbacks iguais que chegam ao mesmo tempo passam os dois (veja as [limitações](arquitetura.md#limitações-conhecidas)).
 - **Economia:** poucas receitas e poucas tarefas. O Hub cobra por tarefa bem-sucedida, e o Router não conta (veja [pesquisa-integration-hub.md](pesquisa-integration-hub.md#15-cobrança-o-que-otimizar-o-fluxo-quer-dizer)).
 
 ---
@@ -147,17 +149,22 @@ Lista de locais: Gotham, Metrópolis, Asgard, Wakanda, Themyscira, Nova York, So
 
 ## D9. A próxima partida é disparada por quem entrou por último na fase (22/11/2026)
 
-**Escolha:** depois de mover o vencedor, o flow de resultado lê os cards do torneio, com o `phases_history`. Ele só dispara a partida seguinte se o adversário já estiver na fase **e** o `lastTimeIn` do card que ele acabou de mover for maior que o do adversário. Se os dois horários forem iguais, dispara o flow do card de posição par.
+**Escolha:** depois de mover o vencedor, o flow de resultado lê os cards do torneio, com o `phases_history`. Ele só dispara a partida seguinte se o adversário já estiver na fase **e** o `lastTimeIn` do card que ele acabou de mover for maior que o do adversário. Se os dois horários forem iguais, dispara o flow do card de maior posição.
 
 **Alternativa:** disparar sempre que o adversário estiver na fase e confiar na validação por estado para descartar o resultado duplicado.
 
-**Motivo:** quando duas quartas voltam juntas, os dois flows podem ver os dois cards na semifinal e disparar a mesma partida duas vezes. Se os dois callbacks dessa partida duplicada também chegassem juntos, com vencedores diferentes, a validação poderia aceitar os dois. Com o desempate, exatamente um dos dois flows dispara. Como cada flow move antes de ler, pelo menos um deles enxerga o adversário, desde que a leitura reflita o movimento do outro na hora. O "Get cards by phase" oferece a seção Phases History com `lastTimeIn` (visto na org em 22/11/2026).
+**Motivo:** quando duas quartas voltam juntas, os dois flows podem ver os dois cards na semifinal e disparar a mesma partida duas vezes. Se os dois callbacks dessa partida duplicada também chegassem juntos, com vencedores diferentes, a validação poderia aceitar os dois. Com o desempate, no máximo um dos dois flows dispara. Como cada flow move antes de ler, pelo menos um deles enxerga o adversário, desde que a leitura reflita o movimento do outro na hora. Isso não garante que a partida sempre saia (veja o limite conhecido). O "Get cards by phase" oferece a seção Phases History com `lastTimeIn` (visto na org em 22/11/2026).
 
-**Ajuste na implementação (22/11/2026):**
-- O horário usado é o `started_current_phase_at` do card, que é a hora de entrada na fase atual e vem direto na resposta da mutation que move o vencedor. Assim, a leitura depois do movimento não custa uma tarefa a mais (veja D13).
-- O desempate no mesmo segundo é pela **maior posição**, e não pela posição par: numa semifinal, os dois cards podem ter posição par (por exemplo, 2 e 4).
+**Ajuste na implementação (22/11/2026):** o horário usado é o `started_current_phase_at` do card, que é a hora de entrada na fase atual e vem direto na resposta da mutation que move o vencedor. Assim, a leitura depois do movimento não custa uma tarefa a mais (veja D13).
 
 **Verificado no teste (22/11/2026):** o horário tem precisão de **segundo**, e dois cards de partidas diferentes entraram na semifinal no mesmo segundo. O empate dentro de uma mesma partida não foi observado na org e foi conferido num teste local (veja [testes.md](testes.md)). A resposta da mutation já mostra o card que o outro flow acabou de mover. No `mundo-bizarro-2`, cada semifinal e a final foram disparadas exatamente uma vez. No `triskelion-1`, as semifinais foram reenviadas à mão, e o flow disparou a final uma vez.
+
+**Limite conhecido (22/11/2026):** a regra evita o disparo duplicado, mas não garante que a partida sempre saia. Num empate no mesmo segundo, se a resposta do primeiro movimento ainda não mostrar o card do adversário, o flow que enxerga o outro card pode ser justamente o que perde o desempate. Nesse caso, nenhum dos dois dispara, e a partida fica parada. Não é preciso haver atraso na leitura: basta o card de maior posição ser movido primeiro e o outro ser movido no mesmo segundo, depois dessa resposta. O mesmo pode acontecer se a ordem dos horários de entrada não for a ordem em que os movimentos foram gravados.
+
+- **Por que não há garantia:** o flow só move e lê. Sem uma operação atômica, não é possível garantir ao mesmo tempo que a partida dispara uma vez só e que ela sempre dispara. A D9 escolheu não duplicar, porque uma partida parada aparece no kanban e tem conserto, e uma partida duplicada pode levar os dois heróis adiante.
+- **Recuperação:** reenviar a partida ao simulador com o mesmo identificador.
+- **Em produção:** um flow agendado acharia partidas com os dois cards parados há mais de N minutos e as reenviaria. Outra opção é reler a fase alguns segundos depois, quando o flow não enxerga o adversário, e reaplicar a regra. Isso cobriria o empate, com mais tarefas por partida. Nenhuma das duas foi implementada.
+- **Nos testes:** o caso não aconteceu na org. O teste local de 22/11 partia de os dois flows enxergarem os dois cards. Sem esse pressuposto, o caso foi reproduzido localmente (veja [testes.md](testes.md)).
 
 ---
 
